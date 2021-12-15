@@ -2,11 +2,11 @@
 
 public interface IManager
 {
-    ICalculator Calculator { get; /*set;*/ }
+    ICalculator Calculator { get; set; }
 
-    //IChecker Checker { get; }
+    IChecker Checker { get; }
 
-    //IPrinter Printer { get; set; }
+    IPrinter Printer { get; set; }
 
-    //ITester Tester { get; set; }
+    ITester Tester { get; set; }
 }
