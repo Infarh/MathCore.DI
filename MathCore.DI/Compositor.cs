@@ -34,7 +34,7 @@ public static class Compositor
             parameterTypes: null);
 
         const MethodAttributes property_method_attributes =
-            MethodAttributes.Public |
+            MethodAttributes.Public | 
             MethodAttributes.SpecialName |
             MethodAttributes.HideBySig |
             MethodAttributes.Virtual;
@@ -80,25 +80,27 @@ public static class Compositor
         ctor_il.Emit(OpCodes.Ldarg_0);
         ctor_il.Emit(OpCodes.Call, typeof(object).GetConstructor(Type.EmptyTypes)!);
 
-        var parameter_index = 1;
+        byte parameter_index = 1;
         foreach (var field in Fields)
         {
             ctor_il.Emit(OpCodes.Ldarg_0);
-            switch (parameter_index++)
-            {
-                case 1:
-                    ctor_il.Emit(OpCodes.Ldarg_1);
-                    break;
-                case 2:
-                    ctor_il.Emit(OpCodes.Ldarg_2);
-                    break;
-                case 3:
-                    ctor_il.Emit(OpCodes.Ldarg_3);
-                    break;
-                default:
-                    ctor_il.Emit(OpCodes.Ldarg_S, parameter_index);
-                    break;
-            }
+            ctor_il.Emit(OpCodes.Ldarg_S, parameter_index++);
+
+            //switch (parameter_index++)
+            //{
+            //    case 1:
+            //        ctor_il.Emit(OpCodes.Ldarg_1);
+            //        break;
+            //    case 2:
+            //        ctor_il.Emit(OpCodes.Ldarg_2);
+            //        break;
+            //    case 3:
+            //        ctor_il.Emit(OpCodes.Ldarg_3);
+            //        break;
+            //    default:
+            //        ctor_il.Emit(OpCodes.Ldarg_S, parameter_index);
+            //        break;
+            //}
 
             ctor_il.Emit(OpCodes.Stfld, field);
         }
@@ -135,9 +137,9 @@ public static class Compositor
 
         type.MakeConstructor(type.MakeProperties(properties));
 
-        var implementation_type = type.CreateType();
+        var type_info = type.CreateTypeInfo();
 
-        return implementation_type;
+        return type_info!.AsType();
     }
 
     public static IServiceCollection AddComposite<TInterface>(this IServiceCollection services, ServiceLifetime ServiceLifetime)
