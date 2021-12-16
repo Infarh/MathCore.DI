@@ -9,3 +9,9 @@ services.AddScoped<IPrinter, ConsolePrinter>();
 services.AddScoped<ITester, Tester>();
 
 services.AddComposite<IManager>(ServiceLifetime.Scoped);
+
+var provider = services.BuildServiceProvider();
+
+var manager = provider.GetRequiredService<IManager>();
+
+Console.WriteLine();
