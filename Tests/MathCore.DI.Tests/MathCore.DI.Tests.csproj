@@ -3,9 +3,20 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
-
+    <LangVersion>preview</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Using Include="System" />
+    <Using Include="System.Linq" />
+    <Using Include="System.Collections.Generic"/>
+    <Using Include="System.Threading.Tasks"/>
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting"/>
+    <Using Include="Microsoft.Extensions.DependencyInjection"/>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="MathCore.TestsExtensions" Version="0.1.32" />

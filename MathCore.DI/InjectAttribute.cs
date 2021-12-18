@@ -1,4 +1,11 @@
 ﻿namespace MathCore.DI;
 
-[AttributeUsage(AttributeTargets.Property | AttributeTargets.Method)]
-public sealed class InjectAttribute : Attribute { }
+[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method | AttributeTargets.Parameter)]
+public sealed class InjectAttribute : Attribute
+{
+    public bool? Required { get; set; }
+
+    public InjectAttribute() { }
+
+    public InjectAttribute(bool? Required) => this.Required = Required;
+}

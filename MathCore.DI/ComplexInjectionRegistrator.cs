@@ -30,6 +30,15 @@ public static class ComplexInjectionRegistrator
            .Concat(type.GetMethods(BindingFlags.Instance | BindingFlags.NonPublic))
            .Cast<MemberInfo>();
 
+        var ctor_has_inject_attribute = type
+           .GetConstructors(BindingFlags.Instance | BindingFlags.Public)
+           .Concat(type.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic))
+           .SelectMany(p => p.GetParameters())
+           .Any(p => p.GetCustomAttribute<InjectAttribute>() is not null);
+
+        if (ctor_has_inject_attribute)
+            return false;
+
         //return !methods.Any(m => m.GetCustomAttribute<InjectAttribute>() != null);
         return !fields
            .Concat(properties)
@@ -50,55 +59,80 @@ public static class ComplexInjectionRegistrator
         const BindingFlags inst_public = BindingFlags.Instance | BindingFlags.Public;
         const BindingFlags inst_no_public = BindingFlags.Instance | BindingFlags.NonPublic;
 
-        // Ищем конструктор с самым большим числом параметров публичный и приватный
-        var ctor = service_type.GetConstructors(inst_public)
+        var ctors = service_type.GetConstructors(inst_public)
            .Concat(service_type.GetConstructors(inst_no_public))
            .OrderByDescending(c => c.GetParameters().Length)
-           .First();
+           .ToArray();
+
+        // Ищем конструктор с самым большим числом параметров публичный и приватный
+        var ctor = ctors.FirstOrDefault(c => c.GetParameters().Any(p => p.GetCustomAttribute<InjectAttribute>() is not null))
+            ?? ctors[0];
 
         var sp = Expression.Parameter(typeof(IServiceProvider), "sp"); // Провайдер сервисов
 
         // Определение метода (расширения) object IServiceProvider.GetRequiredService(Type)
-        var get_service = typeof(ServiceProviderServiceExtensions)
+        var get_required_service = typeof(ServiceProviderServiceExtensions)
                .GetMethod(
-                    nameof(ServiceProviderServiceExtensions.GetRequiredService), 
+                    nameof(ServiceProviderServiceExtensions.GetRequiredService),
                     new[] { typeof(IServiceProvider), typeof(Type) })
-            ?? throw new InvalidOperationException("Не найден метод-расширения GetRequiredService<T> для интерфейса IServiceProvider");
+            ?? throw new InvalidOperationException("Не найден метод-расширения object ServiceProviderServiceExtensions.GetRequiredService(this IServiceProvider, Type)");
+
+        var get_service = typeof(IServiceProvider).GetMethod(nameof(IServiceProvider.GetService), new[] { typeof(Type) })
+            ?? throw new InvalidOperationException("Не найден метод-расширения GetService(Type) для интерфейса IServiceProvider"); ;
 
         // Определяем выражения для каждого из параметров конструктора
-        // Выражение должно обращаться к провайдеру сервисов и требовать у него объект укаданного типа
+        // Выражение должно обращаться к провайдеру сервисов и требовать у него объект указанного типа
         var ctor_parameters = ctor.GetParameters()
-           .Select(parameter =>
+           .Select(parameter => (parameter, parameter.GetCustomAttribute<InjectAttribute>()))
+           .Select(p =>
             {
-                var parameter_type = parameter.ParameterType;       // Тип текущего параметра конструктора
-                var type = Expression.Constant(parameter_type);     //    превращаем в выражение
-                var call = Expression.Call(get_service, sp, type);  // Вызываем sp.GetRequiredService(parameter_type)
-                return Expression.Convert(call, parameter_type);    // Полученный объект приводим к parameter_type
+                var (parameter, inject) = p;
+                var required = inject?.Required ?? !parameter.GetCustomAttributes().Any(a => a.GetType().Name == "NullableAttribute");
+                var parameter_type = parameter.ParameterType;               // Тип текущего параметра конструктора
+                var type = Expression.Constant(parameter_type);             //    превращаем в выражение
+                // Вызываем sp.GetRequiredService(parameter_type)
+                var call = required
+                    ? Expression.Call(get_required_service, sp, type)
+                    : Expression.Call(sp, get_service, type);
+                return Expression.Convert(call, parameter_type);            // Полученный объект приводим к parameter_type
             });
 
         // Ищем все свойства публичные и приватные, принадлежащие экземпляру объекта
         var properties = service_type.GetProperties(inst_public | BindingFlags.SetProperty)
            .Concat(service_type.GetProperties(inst_no_public | BindingFlags.SetProperty))
-           .Where(property => property.GetCustomAttribute<InjectAttribute>() != null) // Выбираем те свойства, у которых есть атрибут [Inject]
-           .Select(property =>
-           {
-               var property_type = property.PropertyType;               // Тип свойства
-               var type = Expression.Constant(property_type);           //    превращаем в выражение
-               var obj = Expression.Call(get_service, sp, type);        // Вызываем sp.GetRequiredService(property_type)
-               var value = Expression.Convert(obj, property_type);      // Полученный объект приводим к property_type
-               return (MemberBinding)Expression.Bind(property, value);  // Формируем выражение, выполняющее привязку полученного значения к свойству
-           })
+           .Select(property => (property, Inject: property.GetCustomAttribute<InjectAttribute>()))
+           .Where(p => p.Inject is not null)
+           // Выбираем те свойства, у которых есть атрибут [Inject]
+           .Select(p =>
+            {
+                var (property, inject) = p;
+                var required = inject?.Required ?? !property.GetCustomAttributes().Any(a => a.GetType().Name == "NullableAttribute");
+                var property_type = property.PropertyType;               // Тип свойства
+                var type = Expression.Constant(property_type);           //    превращаем в выражение
+                // Вызываем sp.GetRequiredService(property_type)
+                var obj = required
+                    ? Expression.Call(get_required_service, sp, type)
+                    : Expression.Call(sp, get_service, type);
+                var value = Expression.Convert(obj, property_type);      // Полученный объект приводим к property_type
+                return (MemberBinding)Expression.Bind(property, value);  // Формируем выражение, выполняющее привязку полученного значения к свойству
+            })
            .ToArray();
 
         // Ищем все поля публичные и приватные, принадлежащие экземпляру объекта
         var fields = service_type.GetFields(inst_public)
            .Concat(service_type.GetFields(inst_no_public))
-           //.Where(field => !field.IsInitOnly)
-           .Select(field =>
+           .Select(field => (property: field, Inject: field.GetCustomAttribute<InjectAttribute>()))
+           .Where(p => p.Inject is not null)
+           .Select(f =>
             {
+                var (field, inject) = f;
+                var required = inject?.Required ?? !field.GetCustomAttributes().Any(a => a.GetType().Name == "NullableAttribute");
                 var field_type = field.FieldType;                       // Тип поля
                 var type = Expression.Constant(field_type);             //    превращаем в выражение
-                var obj = Expression.Call(get_service, sp, type);       // Вызываем sp.GetRequiredService(property_type)
+                // Вызываем sp.GetRequiredService(property_type)
+                var obj = required
+                    ? Expression.Call(get_required_service, sp, type)
+                    : Expression.Call(sp, get_service, type);
                 var value = Expression.Convert(obj, field_type);        // Полученный объект приводим к property_type
                 return (MemberBinding)Expression.Bind(field, value);    // Формируем выражение, выполняющее привязку полученного значения к полю
             })
@@ -117,7 +151,7 @@ public static class ComplexInjectionRegistrator
         // Ищем методы-инициализаторы для выполнения внедрения зависимостей через них
         var result = Expression.Variable(Service, "result");
         // Ищем все публичные и непубличные методы экземпляра
-        var methods = service_type.GetMethods(inst_public) 
+        var methods = service_type.GetMethods(inst_public)
            .Concat(service_type.GetMethods(inst_no_public))
            .Where(InitMethod => InitMethod.GetCustomAttribute<InjectAttribute>() != null) // где есть атрибут [Inject]
            .Select(InitMethod =>
@@ -126,11 +160,16 @@ public static class ComplexInjectionRegistrator
                var parameters = InitMethod
                   .GetParameters()
                   .Select(parameter =>
-                  {
-                      var parameter_type = parameter.ParameterType;     // Определяем тип параметра
-                      var type = Expression.Constant(parameter_type);   //   формируем из него выражение
-                      var obj = Expression.Call(get_service, sp, type); // Формируем вызов к провайдеру сервисов для получения экземпляра указанного типа
-                      return Expression.Convert(obj, parameter_type);   // Приводим тип к типу параметра
+                   {
+                       var inject = parameter.GetCustomAttribute<InjectAttribute>();
+                       var required = inject?.Required ?? !parameter.GetCustomAttributes().Any(a => a.GetType().Name == "NullableAttribute");
+                       var parameter_type = parameter.ParameterType;     // Определяем тип параметра
+                       var type = Expression.Constant(parameter_type);   //   формируем из него выражение
+                       // Формируем вызов к провайдеру сервисов для получения экземпляра указанного типа
+                       var obj = required
+                           ? Expression.Call(get_required_service, sp, type)
+                           : Expression.Call(sp, get_service, type);
+                       return Expression.Convert(obj, parameter_type);   // Приводим тип к типу параметра
                   });
 
                // Формируем выражение вызова данного метода с передачей ему полного набора параметров
@@ -157,7 +196,7 @@ public static class ComplexInjectionRegistrator
         // Формируем выражение инициализации экземпляра сервиса
         var factory_expr = Expression.Lambda<Func<IServiceProvider, object>>(body, sp);
         // компилируем его в делегат
-        var factory = factory_expr.Compile() 
+        var factory = factory_expr.Compile()
             ?? throw new InvalidOperationException("Не удалось выполнить сборку выражения инициализации сервиса");
 
         return new ServiceDescriptor(Service, factory, Mode);
