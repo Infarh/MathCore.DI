@@ -1,0 +1,24 @@
+name: Testing
+
+on: [push]
+
+jobs:
+  build:
+    name: Test on .NET Core
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x
+        
+    - name: Build
+      run: |
+        dotnet build MathCore.DI --nologo
+        dotnet build Tests/MathCore.DI.Tests --nologo
+        
+    - name: Test
+      run: dotnet test Tests/MathCore.DI.Tests --no-build --nologo
