@@ -65,7 +65,7 @@ public static class ComplexInjectionRegistrator
            .ToArray();
 
         // Ищем конструктор с самым большим числом параметров публичный и приватный
-        var ctor = ctors.FirstOrDefault(c => c.GetParameters().Any(p => p.GetCustomAttribute<InjectAttribute>() is not null))
+        var ctor = ctors.FirstOrDefault(c => c.GetParameters().Any(p => p.GetCustomAttributes().Any(a => a.GetType().Name == "InjectAttribute")))
             ?? ctors[0];
 
         var sp = Expression.Parameter(typeof(IServiceProvider), "sp"); // Провайдер сервисов
@@ -83,11 +83,12 @@ public static class ComplexInjectionRegistrator
         // Определяем выражения для каждого из параметров конструктора
         // Выражение должно обращаться к провайдеру сервисов и требовать у него объект указанного типа
         var ctor_parameters = ctor.GetParameters()
-           .Select(parameter => (parameter, parameter.GetCustomAttribute<InjectAttribute>()))
+           .Select(parameter => (parameter, parameter.GetCustomAttributes().FirstOrDefault(a => a.GetType().Name == "InjectAttribute")))
            .Select(p =>
             {
                 var (parameter, inject) = p;
-                var required = inject?.Required ?? !parameter.GetCustomAttributes().Any(a => a.GetType().Name == "NullableAttribute");
+                var required = (inject as InjectAttribute)?.Required 
+                    ?? !parameter.GetCustomAttributes().Any(a => a.GetType().Name == "NullableAttribute");
                 var parameter_type = parameter.ParameterType;               // Тип текущего параметра конструктора
                 var type = Expression.Constant(parameter_type);             //    превращаем в выражение
                 // Вызываем sp.GetRequiredService(parameter_type)
@@ -100,13 +101,14 @@ public static class ComplexInjectionRegistrator
         // Ищем все свойства публичные и приватные, принадлежащие экземпляру объекта
         var properties = service_type.GetProperties(inst_public | BindingFlags.SetProperty)
            .Concat(service_type.GetProperties(inst_no_public | BindingFlags.SetProperty))
-           .Select(property => (property, Inject: property.GetCustomAttribute<InjectAttribute>()))
+           .Select(property => (property, Inject: property.GetCustomAttributes().FirstOrDefault(a => a.GetType().Name == "InjectAttribute")))
            .Where(p => p.Inject is not null)
            // Выбираем те свойства, у которых есть атрибут [Inject]
            .Select(p =>
             {
                 var (property, inject) = p;
-                var required = inject?.Required ?? !property.GetCustomAttributes().Any(a => a.GetType().Name == "NullableAttribute");
+                var required = (inject as InjectAttribute)?.Required 
+                    ?? !property.GetCustomAttributes().Any(a => a.GetType().Name == "NullableAttribute");
                 var property_type = property.PropertyType;               // Тип свойства
                 var type = Expression.Constant(property_type);           //    превращаем в выражение
                 // Вызываем sp.GetRequiredService(property_type)
@@ -121,12 +123,13 @@ public static class ComplexInjectionRegistrator
         // Ищем все поля публичные и приватные, принадлежащие экземпляру объекта
         var fields = service_type.GetFields(inst_public)
            .Concat(service_type.GetFields(inst_no_public))
-           .Select(field => (property: field, Inject: field.GetCustomAttribute<InjectAttribute>()))
+           .Select(field => (property: field, Inject: field.GetCustomAttributes().FirstOrDefault(a => a.GetType().Name == "InjectAttribute")))
            .Where(p => p.Inject is not null)
            .Select(f =>
             {
                 var (field, inject) = f;
-                var required = inject?.Required ?? !field.GetCustomAttributes().Any(a => a.GetType().Name == "NullableAttribute");
+                var required = (inject as InjectAttribute)?.Required 
+                    ?? !field.GetCustomAttributes().Any(a => a.GetType().Name == "NullableAttribute");
                 var field_type = field.FieldType;                       // Тип поля
                 var type = Expression.Constant(field_type);             //    превращаем в выражение
                 // Вызываем sp.GetRequiredService(property_type)
@@ -161,8 +164,9 @@ public static class ComplexInjectionRegistrator
                   .GetParameters()
                   .Select(parameter =>
                    {
-                       var inject = parameter.GetCustomAttribute<InjectAttribute>();
-                       var required = inject?.Required ?? !parameter.GetCustomAttributes().Any(a => a.GetType().Name == "NullableAttribute");
+                       var inject = parameter.GetCustomAttributes().FirstOrDefault(a => a.GetType().Name == "InjectAttribute");
+                       var required = (inject as InjectAttribute)?.Required 
+                           ?? !parameter.GetCustomAttributes().Any(a => a.GetType().Name == "NullableAttribute");
                        var parameter_type = parameter.ParameterType;     // Определяем тип параметра
                        var type = Expression.Constant(parameter_type);   //   формируем из него выражение
                        // Формируем вызов к провайдеру сервисов для получения экземпляра указанного типа
