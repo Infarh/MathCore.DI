@@ -3,29 +3,34 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
 using System.Reflection;
+// ReSharper disable ArgumentsStyleOther
+// ReSharper disable ArgumentsStyleNamedExpression
+// ReSharper disable ArgumentsStyleLiteral
 
 namespace MathCore.DI;
 
 internal static class InterfaceImplementator
 {
-    private static FieldBuilder MakeField(this TypeBuilder type, PropertyInfo Property)
-    {
-        var field_attributes = FieldAttributes.Private;
-        if (!Property.CanWrite) field_attributes |= FieldAttributes.InitOnly;
-        var field = type.DefineField(
-            fieldName: $"_{Property.Name}",
-            type: Property.PropertyType,
-            attributes: field_attributes);
+    private static (FieldBuilder Field, PropertyBuilder Property) MakeProperty(this TypeBuilder type, PropertyInfo Property) =>
+        type.MakeProperty(
+            PropertyName: Property.Name,
+            PropertyType: Property.PropertyType,
+            CanWrite: Property.CanWrite, 
+            CanRead: Property.CanRead);
 
-        return field;
-    }
-
-    private static void MakeProperty(this TypeBuilder type, PropertyInfo Property, FieldInfo Field)
+    private static (FieldBuilder Field, PropertyBuilder Property) MakeProperty(
+        this TypeBuilder type,
+        string PropertyName,
+        Type PropertyType,
+        bool CanWrite = true,
+        bool CanRead = true)
     {
+        var field = type.MakeField($"_{PropertyName}", PropertyType, !CanWrite);
+
         var property = type.DefineProperty(
-            name: Property.Name,
+            name: PropertyName,
             attributes: PropertyAttributes.HasDefault,
-            returnType: Property.PropertyType,
+            returnType: PropertyType,
             parameterTypes: null);
 
         const MethodAttributes property_method_attributes =
@@ -34,26 +39,26 @@ internal static class InterfaceImplementator
             MethodAttributes.HideBySig |
             MethodAttributes.Virtual;
 
-        if (Property.CanRead)
+        if (CanRead)
         {
             var get_method = type.DefineMethod(
-                name: $"get_{Property.Name}",
+                name: $"get_{PropertyName}",
                 attributes: property_method_attributes,
                 returnType: property.PropertyType,
                 parameterTypes: Type.EmptyTypes);
 
             var il = get_method.GetILGenerator();
             il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Ldfld, Field);
+            il.Emit(OpCodes.Ldfld, field);
             il.Emit(OpCodes.Ret);
 
             property.SetGetMethod(get_method);
         }
 
-        if (Property.CanWrite)
+        if (CanWrite)
         {
             var set_method = type.DefineMethod(
-                name: $"set_{Property.Name}",
+                name: $"set_{PropertyName}",
                 attributes: property_method_attributes,
                 returnType: null,
                 parameterTypes: new[] { property.PropertyType });
@@ -61,12 +66,22 @@ internal static class InterfaceImplementator
             var il = set_method.GetILGenerator();
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldarg_1);
-            il.Emit(OpCodes.Stfld, Field);
+            il.Emit(OpCodes.Stfld, field);
             il.Emit(OpCodes.Ret);
 
             property.SetSetMethod(set_method);
         }
+
+        return (field, property);
     }
+
+    private static FieldBuilder MakeField(this TypeBuilder type, string FieldName, Type PropertyType, bool Readonly = false) =>
+        type.DefineField(
+            fieldName: FieldName,
+            type: PropertyType,
+            attributes: Readonly 
+                ? FieldAttributes.Private | FieldAttributes.InitOnly 
+                : FieldAttributes.Private);
 
     private static void MakeConstructor(this TypeBuilder type, IReadOnlyCollection<FieldBuilder> Fields)
     {
@@ -86,18 +101,10 @@ internal static class InterfaceImplementator
         ctor_il.Emit(OpCodes.Ret);
     }
 
-    private static List<FieldBuilder> MakeProperties(this TypeBuilder type, IEnumerable<PropertyInfo> Properties)
-    {
-        var fields = new List<FieldBuilder>();
-        foreach (var property_info in Properties)
-        {
-            var field = type.MakeField(property_info);
-            type.MakeProperty(property_info, field);
-            fields.Add(field);
-        }
-
-        return fields;
-    }
+    private static List<FieldBuilder> MakeProperties(this TypeBuilder type, IEnumerable<PropertyInfo> Properties) => 
+        Properties
+           .Select(property_info => type.MakeProperty(property_info).Field)
+           .ToList();
 
     public static Type CreateImplementation(this Type InterfaceType)
     {
