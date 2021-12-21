@@ -12,10 +12,17 @@ public static class AssemblyServicesRegistrator
     {
         foreach (var type in assembly.DefinedTypes)
         {
-            var info = type.GetCustomAttribute<ServiceAttribute>();
-            if (info is null) continue;
-            services.AddService(type, info.Implementation, info.Mode);
-            OnServiceAdded?.Invoke(type, info.Implementation, info.Mode);
+            if (type.GetCustomAttribute<ServiceAttribute>() is not var (service, implementation, lifetime)) continue;
+            if (service is null)
+            {
+                services.AddService(type, implementation, lifetime);
+                OnServiceAdded?.Invoke(type, implementation, lifetime);
+            }
+            else
+            {
+                services.AddService(service, type, lifetime);
+                OnServiceAdded?.Invoke(service, type, lifetime);
+            }
         }
 
         return services;
