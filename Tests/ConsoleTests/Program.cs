@@ -15,3 +15,4 @@ var provider = services.BuildServiceProvider();
 var manager = provider.GetRequiredService<IManager>();
 
 Console.WriteLine();
+

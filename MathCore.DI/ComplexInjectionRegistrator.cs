@@ -94,7 +94,7 @@ public static class ComplexInjectionRegistrator
                 // Вызываем sp.GetRequiredService(parameter_type)
                 var call = required
                     ? Expression.Call(get_required_service, sp, type)
-                    : Expression.Call(sp, get_service, type);
+                    : Expression.Call(sp, get_service, type);   
                 return Expression.Convert(call, parameter_type);            // Полученный объект приводим к parameter_type
             });
 
