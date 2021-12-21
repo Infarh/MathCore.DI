@@ -1,8 +1,4 @@
-﻿using System.Reflection;
-
-using Microsoft.Extensions.DependencyInjection;
-
-namespace MathCore.DI;
+﻿namespace MathCore.DI;
 
 public static class CompositorRegistrator
 {

@@ -8,5 +8,4 @@ public sealed class InjectAttribute : Attribute
     public InjectAttribute() { }
 
     public InjectAttribute(bool Required) => this.Required = Required;
-
 }
