@@ -1,13 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using MathCore.DI.Tests.Interfaces;
 
 namespace MathCore.DI.Tests;
 
 [TestClass]
 public class ComplexInjectionRegistratorTests
 {
-    /// <summary>Первый тестовый сервис</summary>
-    private interface ITestService1 { }
-
     /// <summary>Простая реализация тестового сервиса - пустой класс</summary>
     private class SimpleTestService1 : ITestService1 { }
 
@@ -37,9 +34,6 @@ public class ComplexInjectionRegistratorTests
         var instance = provider.GetService(service_type);
         Assert.That.Value(instance).Is(implementation_type);
     }
-
-    /// <summary>Второй тестовый сервис</summary>
-    private interface ITestService2 { }
 
     /// <summary>Второй тестовый сервис, реализующий внедрение через поле</summary>
     private class Service2WithPrivateFieldOfService1 : ITestService2
@@ -217,9 +211,6 @@ public class ComplexInjectionRegistratorTests
 
         Assert.That.Value(field_value).IsEqual(service1_instance);
     }
-
-    /// <summary>Тестовый сервис 3</summary>
-    private interface ITestService3 { }
 
     /// <summary>Простая реализация тестового сервиса 3</summary>
     private class SimpleTestService3 : ITestService3 { }
@@ -451,5 +442,155 @@ public class ComplexInjectionRegistratorTests
         Assert.That.Value(service2_2)
            .As<Service2WithOptionalPrivateReadonlyProperty>()
            .Where(s => s.GetService1()).Check(s1 => s1.IsNull());
+    }
+
+    private class Service2WithPublicMethodInjection : ITestService2
+    {
+        private ITestService1? _Service1;
+
+        [Inject]
+        public void Initialize(ITestService1 Service1) => _Service1 = Service1;
+
+        public ITestService1? GetService1() => _Service1;
+    }
+
+    [TestMethod]
+    public void InjectWithPublicMethod()
+    {
+        var service_interface = typeof(ITestService2);
+        var service_type = typeof(Service2WithPublicMethodInjection);
+        const ServiceLifetime service_lifetime = ServiceLifetime.Transient;
+
+        var service_collection = new ServiceCollection();
+        service_collection.AddSingleton<ITestService1, SimpleTestService1>();
+        service_collection.AddService(service_interface, service_type, service_lifetime);
+
+        var descriptors = service_collection.ToArray();
+        Assert.That.Value(descriptors.Length).IsEqual(2);
+        Assert.That.Value(descriptors[1])
+           .Where(d => d.ImplementationFactory).Check(f => f.IsNotNull("Не было сформировано фабричного метода экземпляров сервиса"))
+           .Where(d => d.ImplementationInstance).Check(i => i.IsNull("Неверно был сформирован экземпляр сервиса"))
+           .Where(d => d.Lifetime).Check(l => l.IsEqual(service_lifetime))
+           .Where(d => d.ServiceType).Check(t => t.IsEqual(service_interface))
+           .Where(d => d.ImplementationType).Check(t => t.IsNull());
+
+        var provider = service_collection.BuildServiceProvider();
+
+        var service = provider.GetRequiredService<ITestService2>();
+
+        Assert.That.Value(service).As<Service2WithPublicMethodInjection>()
+           .Where(s => s.GetService1()).Check(s => s.Is<SimpleTestService1>());
+    }
+
+    private class Service2WithPublicMethodInjectionOptional : ITestService2
+    {
+        private ITestService1? _Service1;
+
+        [Inject(Required = false)]
+        public void Initialize(ITestService1 Service1) => _Service1 = Service1;
+
+        public ITestService1? GetService1() => _Service1;
+    }
+
+    [TestMethod]
+    public void InjectWithPublicMethodOptional()
+    {
+        var service_interface = typeof(ITestService2);
+        var service_type = typeof(Service2WithPublicMethodInjectionOptional);
+        const ServiceLifetime service_lifetime = ServiceLifetime.Transient;
+
+        var service_collection = new ServiceCollection();
+        service_collection.AddService(service_interface, service_type, service_lifetime);
+
+        var descriptors = service_collection.ToArray();
+        Assert.That.Value(descriptors.Length).IsEqual(1);
+        Assert.That.Value(descriptors[0])
+           .Where(d => d.ImplementationFactory).Check(f => f.IsNotNull("Не было сформировано фабричного метода экземпляров сервиса"))
+           .Where(d => d.ImplementationInstance).Check(i => i.IsNull("Неверно был сформирован экземпляр сервиса"))
+           .Where(d => d.Lifetime).Check(l => l.IsEqual(service_lifetime))
+           .Where(d => d.ServiceType).Check(t => t.IsEqual(service_interface))
+           .Where(d => d.ImplementationType).Check(t => t.IsNull());
+
+        var provider = service_collection.BuildServiceProvider();
+
+        var service = provider.GetRequiredService<ITestService2>();
+
+        Assert.That.Value(service).As<Service2WithPublicMethodInjectionOptional>()
+           .Where(s => s.GetService1()).Check(s => s.IsNull());
+    }
+
+    private class Service2WithPrivateMethodInjection : ITestService2
+    {
+        private ITestService1? _Service1;
+
+        [Inject]
+        private void Initialize(ITestService1 Service1) => _Service1 = Service1;
+
+        public ITestService1? GetService1() => _Service1;
+    }
+
+    [TestMethod]
+    public void InjectWithPrivateMethod()
+    {
+        var service_interface = typeof(ITestService2);
+        var service_type = typeof(Service2WithPrivateMethodInjection);
+        const ServiceLifetime service_lifetime = ServiceLifetime.Transient;
+
+        var service_collection = new ServiceCollection();
+        service_collection.AddSingleton<ITestService1, SimpleTestService1>();
+        service_collection.AddService(service_interface, service_type, service_lifetime);
+
+        var descriptors = service_collection.ToArray();
+        Assert.That.Value(descriptors.Length).IsEqual(2);
+        Assert.That.Value(descriptors[1])
+           .Where(d => d.ImplementationFactory).Check(f => f.IsNotNull("Не было сформировано фабричного метода экземпляров сервиса"))
+           .Where(d => d.ImplementationInstance).Check(i => i.IsNull("Неверно был сформирован экземпляр сервиса"))
+           .Where(d => d.Lifetime).Check(l => l.IsEqual(service_lifetime))
+           .Where(d => d.ServiceType).Check(t => t.IsEqual(service_interface))
+           .Where(d => d.ImplementationType).Check(t => t.IsNull());
+
+        var provider = service_collection.BuildServiceProvider();
+
+        var service = provider.GetRequiredService<ITestService2>();
+
+        Assert.That.Value(service).As<Service2WithPrivateMethodInjection>()
+           .Where(s => s.GetService1()).Check(s => s.Is<SimpleTestService1>());
+    }
+
+    private class Service2WithPrivateMethodInjectionOptional : ITestService2
+    {
+        private ITestService1? _Service1;
+
+        [Inject(Required = false)]
+        private void Initialize(ITestService1 Service1) => _Service1 = Service1;
+
+        public ITestService1? GetService1() => _Service1;
+    }
+
+    [TestMethod]
+    public void InjectWithPrivateMethodOptional()
+    {
+        var service_interface = typeof(ITestService2);
+        var service_type = typeof(Service2WithPrivateMethodInjectionOptional);
+        const ServiceLifetime service_lifetime = ServiceLifetime.Transient;
+
+        var service_collection = new ServiceCollection();
+        service_collection.AddService(service_interface, service_type, service_lifetime);
+
+        var descriptors = service_collection.ToArray();
+        Assert.That.Value(descriptors.Length).IsEqual(1);
+        Assert.That.Value(descriptors[0])
+           .Where(d => d.ImplementationFactory).Check(f => f.IsNotNull("Не было сформировано фабричного метода экземпляров сервиса"))
+           .Where(d => d.ImplementationInstance).Check(i => i.IsNull("Неверно был сформирован экземпляр сервиса"))
+           .Where(d => d.Lifetime).Check(l => l.IsEqual(service_lifetime))
+           .Where(d => d.ServiceType).Check(t => t.IsEqual(service_interface))
+           .Where(d => d.ImplementationType).Check(t => t.IsNull());
+
+        var provider = service_collection.BuildServiceProvider();
+
+        var service = provider.GetRequiredService<ITestService2>();
+
+        Assert.That.Value(service).As<Service2WithPrivateMethodInjectionOptional>()
+           .Where(s => s.GetService1()).Check(s => s.IsNull());
     }
 }

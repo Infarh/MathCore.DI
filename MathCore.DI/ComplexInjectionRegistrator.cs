@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System.Data.Common;
+using System.Linq.Expressions;
 using System.Reflection;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -158,15 +159,16 @@ public static class ComplexInjectionRegistrator
            .Concat(service_type.GetMethods(inst_no_public))
            .Where(InitMethod => InitMethod.GetCustomAttribute<InjectAttribute>() != null) // где есть атрибут [Inject]
            .Select(InitMethod =>
-           {
+{
+                var inject = InitMethod.GetCustomAttributes().FirstOrDefault(a => a.GetType().Name == "InjectAttribute");
+                var method_required = (inject as InjectAttribute)?.Required;
+
                // Определяем все параметры выбранного метода
-               var parameters = InitMethod
+                var parameters = InitMethod
                   .GetParameters()
                   .Select(parameter =>
                    {
-                       var inject = parameter.GetCustomAttributes().FirstOrDefault(a => a.GetType().Name == "InjectAttribute");
-                       var required = (inject as InjectAttribute)?.Required 
-                           ?? !parameter.GetCustomAttributes().Any(a => a.GetType().Name == "NullableAttribute");
+                       var required = method_required ?? !parameter.GetCustomAttributes().Any(a => a.GetType().Name == "NullableAttribute");
                        var parameter_type = parameter.ParameterType;     // Определяем тип параметра
                        var type = Expression.Constant(parameter_type);   //   формируем из него выражение
                        // Формируем вызов к провайдеру сервисов для получения экземпляра указанного типа
@@ -176,8 +178,12 @@ public static class ComplexInjectionRegistrator
                        return Expression.Convert(obj, parameter_type);   // Приводим тип к типу параметра
                   });
 
+               Expression service_impl = Service == service_type 
+                   ? result 
+                   : Expression.Convert(result, service_type);
+
                // Формируем выражение вызова данного метода с передачей ему полного набора параметров
-               return (Expression)Expression.Call(result, InitMethod, parameters);
+               return (Expression)Expression.Call(service_impl, InitMethod, parameters);
            })
            .ToArray();
 

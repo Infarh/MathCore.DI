@@ -17,7 +17,8 @@ public static class CompositorRegistrator
         var interface_type = typeof(TInterface);
 
         const BindingFlags instance = BindingFlags.Public | BindingFlags.Instance;
-        if (interface_type.GetMethods(instance) is { Length: > 0 } methods)
+        var methods = interface_type.GetMethods(instance);
+        if (methods.Any(method => !method.Name.StartsWith("get_") && !method.Name.StartsWith("set_")))
             throw new InvalidOperationException("В указанном интерфейсе присутствуют методы. Интерфейс может содержать только свойства.")
             {
                 Data =

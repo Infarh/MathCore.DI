@@ -17,7 +17,7 @@ namespace ConsoleTests
             this.Tester = Tester;
         }
 
-        public ICalculator Calculator { get; set; }
+        public ICalculator Calculator { get; init; }
         public IChecker Checker { get; }
         public IPrinter Printer { get; set; }
         public ITester Tester { get; set; }

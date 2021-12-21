@@ -12,6 +12,8 @@
     <Using Include="ConsoleTests.Interfaces"/>
     <Using Include="ConsoleTests.Services"/>
     <Using Include="Microsoft.Extensions.DependencyInjection"/>
+    <Using Include="MathCore.DI"/>
+    <Using Include="ConsoleTests"/>
   </ItemGroup>
 
   <ItemGroup>
