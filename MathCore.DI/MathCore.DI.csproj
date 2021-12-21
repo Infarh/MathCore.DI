@@ -8,9 +8,9 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>0.0.1</Version>
+    <Version>0.0.1.1</Version>
     <PackageReleaseNotes>
-      Добавлены методы регистрации сервисов из указанной сборки
+      Обновление поведения атрибута ServiceAttribute с возможностью указывать либо тип интерфейса, либо и тип реализации
     </PackageReleaseNotes>
   </PropertyGroup>
 
