@@ -10,7 +10,7 @@
   <PropertyGroup>
     <Version>0.0.1</Version>
     <PackageReleaseNotes>
-      Запуск проекта
+      Добавлены методы регистрации сервисов из указанной сборки
     </PackageReleaseNotes>
   </PropertyGroup>
 
