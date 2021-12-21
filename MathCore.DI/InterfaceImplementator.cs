@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Emit;
-using System.Reflection;
+﻿using System.Reflection.Emit;
 // ReSharper disable ArgumentsStyleOther
 // ReSharper disable ArgumentsStyleNamedExpression
 // ReSharper disable ArgumentsStyleLiteral
@@ -11,39 +7,43 @@ namespace MathCore.DI;
 
 internal static class InterfaceImplementator
 {
-    private static (FieldBuilder Field, PropertyBuilder Property) MakeProperty(this TypeBuilder type, PropertyInfo Property) =>
-        type.MakeProperty(
-            PropertyName: Property.Name,
-            PropertyType: Property.PropertyType,
-            CanWrite: Property.CanWrite, 
-            CanRead: Property.CanRead);
-
-    private static (FieldBuilder Field, PropertyBuilder Property) MakeProperty(
-        this TypeBuilder type,
-        string PropertyName,
-        Type PropertyType,
-        bool CanWrite = true,
-        bool CanRead = true)
+    // https://alistairevans.co.uk/2020/11/01/detecting-init-only-properties-with-reflection-in-c-9/
+    /// <summary>Определение - является ли свойство доступным только для инициализации</summary>
+    /// <param name="property">Информация об исследуемом свойстве</param>
+    /// <returns>Истина, если свойство имеет модификатор <c>init</c></returns>
+    public static bool IsInitOnly(this PropertyInfo property)
     {
-        var field = type.MakeField($"_{PropertyName}", PropertyType, !CanWrite);
+        if (!property.CanWrite) return false;
+
+        var set_method = property.SetMethod;
+
+        // Get the modifiers applied to the return parameter.
+        var method_return_parameter_modifiers = set_method.ReturnParameter!.GetRequiredCustomModifiers();
+
+        // Init-only properties are marked with the IsExternalInit type.
+        return method_return_parameter_modifiers.Any(type => type.FullName == "System.Runtime.CompilerServices.IsExternalInit");
+    }
+
+    private static (FieldBuilder Field, PropertyBuilder Property) MakeProperty(this TypeBuilder type, PropertyInfo Property)
+    {
+
+        var field = type.MakeField(
+            FieldName: $"_{Property.Name}",
+            PropertyType: Property.PropertyType,
+            Readonly: !Property.CanWrite);
 
         var property = type.DefineProperty(
-            name: PropertyName,
-            attributes: PropertyAttributes.HasDefault,
-            returnType: PropertyType,
+            name: Property.Name,
+            attributes: Property.Attributes,
+            returnType: Property.PropertyType,
             parameterTypes: null);
 
-        const MethodAttributes property_method_attributes =
-            MethodAttributes.Public |
-            MethodAttributes.SpecialName |
-            MethodAttributes.HideBySig |
-            MethodAttributes.Virtual;
-
-        if (CanRead)
+        if (Property.GetMethod is { } get_method_info)
         {
             var get_method = type.DefineMethod(
-                name: $"get_{PropertyName}",
-                attributes: property_method_attributes,
+                name: get_method_info.Name,
+                attributes: get_method_info.Attributes & ~MethodAttributes.Abstract,
+                callingConvention: get_method_info.CallingConvention,
                 returnType: property.PropertyType,
                 parameterTypes: Type.EmptyTypes);
 
@@ -55,11 +55,16 @@ internal static class InterfaceImplementator
             property.SetGetMethod(get_method);
         }
 
-        if (CanWrite)
+        if (Property.SetMethod is { } set_method_info)
         {
+            var is_init_only = Property.IsInitOnly();
+            if (is_init_only)
+                throw new NotSupportedException($"В реализуемом интерфейсе {Property.DeclaringType} свойство {Property.Name} имеет неподдерживаемый модификатор init");
+
             var set_method = type.DefineMethod(
-                name: $"set_{PropertyName}",
-                attributes: property_method_attributes,
+                name: set_method_info.Name,
+                attributes: set_method_info.Attributes & ~MethodAttributes.Abstract,
+                callingConvention: set_method_info.CallingConvention,
                 returnType: null,
                 parameterTypes: new[] { property.PropertyType });
 
@@ -68,6 +73,8 @@ internal static class InterfaceImplementator
             il.Emit(OpCodes.Ldarg_1);
             il.Emit(OpCodes.Stfld, field);
             il.Emit(OpCodes.Ret);
+
+            //set_method.re
 
             property.SetSetMethod(set_method);
         }
@@ -120,7 +127,8 @@ internal static class InterfaceImplementator
             parent: typeof(object),
             interfaces: new[] { InterfaceType });
 
-        type.MakeConstructor(type.MakeProperties(properties));
+        var properties_impl = type.MakeProperties(properties);
+        type.MakeConstructor(properties_impl);
 
         var type_info = type.CreateTypeInfo() ?? throw new InvalidOperationException();
 

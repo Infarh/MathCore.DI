@@ -2,7 +2,7 @@
 
 public interface IManager
 {
-    ICalculator Calculator { get; set; }
+    ICalculator Calculator { get; init; }
 
     IChecker Checker { get; }
 
