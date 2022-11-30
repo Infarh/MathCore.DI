@@ -2,23 +2,38 @@ name: Testing
 
 on: [push]
 
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+  DOTNET_NOLOGO: true
+
 jobs:
   build:
     name: Test on .NET Core
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 7.0.x
-        
-    - name: Build
-      run: |
-        dotnet build MathCore.DI --nologo
-        dotnet build Tests/MathCore.DI.Tests --nologo
-        
-    - name: Test
-      run: dotnet test Tests/MathCore.DI.Tests --no-build --nologo
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 7.0.x
+          
+      - name: Cache NuGet  
+        uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget
+
+      - name: Build
+        run: |
+          dotnet build MathCore.DI
+          dotnet build Tests/MathCore.DI.Tests
+
+      - name: Test
+        run: dotnet test Tests/MathCore.DI.Tests --no-build
