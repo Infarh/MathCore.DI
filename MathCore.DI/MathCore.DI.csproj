@@ -8,9 +8,9 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>0.0.1.3</Version>
+    <Version>0.0.2</Version>
     <PackageReleaseNotes>
-      Обновление пакетов
+      Добавлена новая реализация атрибута сервиса шаблонного типа
     </PackageReleaseNotes>
   </PropertyGroup>
 

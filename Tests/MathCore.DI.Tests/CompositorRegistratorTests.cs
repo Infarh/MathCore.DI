@@ -66,18 +66,18 @@ public class CompositorRegistratorTests
 
         var constructor_parameters = constructor.GetParameters();
         Assert.That.Value(constructor_parameters)
-           .Where(parameters => parameters.Length).Check(length => length.IsEqual(3))
-           .Where(parameters => parameters[0]).Check(parameter => parameter.Where(p => p.ParameterType).CheckEquals(typeof(ITestService1)))
-           .Where(parameters => parameters[1]).Check(parameter => parameter.Where(p => p.ParameterType).CheckEquals(typeof(ITestService2)))
-           .Where(parameters => parameters[2]).Check(parameter => parameter.Where(p => p.ParameterType).CheckEquals(typeof(ITestService3)));
+           .Where(parameters => parameters!.Length).Check(length => length.IsEqual(3))
+           .Where(parameters => parameters![0]).Check(parameter => parameter.Where(p => p!.ParameterType).CheckEquals(typeof(ITestService1)))
+           .Where(parameters => parameters![1]).Check(parameter => parameter.Where(p => p!.ParameterType).CheckEquals(typeof(ITestService2)))
+           .Where(parameters => parameters![2]).Check(parameter => parameter.Where(p => p!.ParameterType).CheckEquals(typeof(ITestService3)));
 
         var provider = service_collection.BuildServiceProvider();
 
         var serivce = provider.GetRequiredService<ITestService0>();
 
         Assert.That.Value(serivce)
-           .Where(s => s.GetService1()).CheckEquals(service1)
-           .Where(s => s.GetService2()).CheckEquals(service2)
-           .Where(s => s.GetService3()).CheckEquals(service3);
+           .Where(s => s!.GetService1()).CheckEquals(service1)
+           .Where(s => s!.GetService2()).CheckEquals(service2)
+           .Where(s => s!.GetService3()).CheckEquals(service3);
     }
 }

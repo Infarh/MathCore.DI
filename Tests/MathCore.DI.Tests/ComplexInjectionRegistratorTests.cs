@@ -23,11 +23,11 @@ public class ComplexInjectionRegistratorTests
 
         Assert.That.Value(descriptors.Length).IsEqual(1);
         Assert.That.Value(descriptors[0])
-           .Where(d => d.ImplementationFactory).Check(f => f.IsNull("Неверно был сформирован фабричный метод экземпляров сервиса"))
-           .Where(d => d.ImplementationInstance).Check(i => i.IsNull("Неверно был сформирован экземпляр сервиса"))
-           .Where(d => d.Lifetime).Check(l => l.IsEqual(service_lifetime))
-           .Where(d => d.ServiceType).Check(t => t.IsEqual(service_type))
-           .Where(d => d.ImplementationType).Check(t => t.IsEqual(implementation_type));
+           .Where(d => d!.ImplementationFactory).Check(f => f.IsNull("Неверно был сформирован фабричный метод экземпляров сервиса"))
+           .Where(d => d!.ImplementationInstance).Check(i => i.IsNull("Неверно был сформирован экземпляр сервиса"))
+           .Where(d => d!.Lifetime).Check(l => l.IsEqual(service_lifetime))
+           .Where(d => d!.ServiceType).Check(t => t.IsEqual(service_type))
+           .Where(d => d!.ImplementationType).Check(t => t.IsEqual(implementation_type));
 
         var provider = service_collection.BuildServiceProvider();
 
@@ -67,18 +67,18 @@ public class ComplexInjectionRegistratorTests
 
         Assert.That.Value(descriptors.Length).IsEqual(2);
         Assert.That.Value(descriptors[1])
-           .Where(d => d.ImplementationFactory).Check(f => f.IsNotNull("Не было сформировано фабричного метода экземпляров сервиса"))
-           .Where(d => d.ImplementationInstance).Check(i => i.IsNull("Неверно был сформирован экземпляр сервиса"))
-           .Where(d => d.Lifetime).Check(l => l.IsEqual(service_lifetime))
-           .Where(d => d.ServiceType).Check(t => t.IsEqual(service_type))
-           .Where(d => d.ImplementationType).Check(t => t.IsNull());
+           .Where(d => d!.ImplementationFactory).Check(f => f.IsNotNull("Не было сформировано фабричного метода экземпляров сервиса"))
+           .Where(d => d!.ImplementationInstance).Check(i => i.IsNull("Неверно был сформирован экземпляр сервиса"))
+           .Where(d => d!.Lifetime).Check(l => l.IsEqual(service_lifetime))
+           .Where(d => d!.ServiceType).Check(t => t.IsEqual(service_type))
+           .Where(d => d!.ImplementationType).Check(t => t.IsNull());
 
         var provider = service_collection.BuildServiceProvider();
 
         var instance = provider.GetService(service_type);
         var service2_instance = Assert.That.Value(instance).As<Service2WithPrivateFieldOfService1>();
 
-        var field_value = service2_instance.ActualValue.GetFieldValue();
+        var field_value = service2_instance.ActualValue!.GetFieldValue();
 
         Assert.That.Value(field_value).IsEqual(service1_instance);
     }
@@ -110,18 +110,18 @@ public class ComplexInjectionRegistratorTests
 
         Assert.That.Value(descriptors.Length).IsEqual(2);
         Assert.That.Value(descriptors[1])
-           .Where(d => d.ImplementationFactory).Check(f => f.IsNotNull("Не было сформировано фабричного метода экземпляров сервиса"))
-           .Where(d => d.ImplementationInstance).Check(i => i.IsNull("Неверно был сформирован экземпляр сервиса"))
-           .Where(d => d.Lifetime).Check(l => l.IsEqual(service_lifetime))
-           .Where(d => d.ServiceType).Check(t => t.IsEqual(service_type))
-           .Where(d => d.ImplementationType).Check(t => t.IsNull());
+           .Where(d => d!.ImplementationFactory).Check(f => f.IsNotNull("Не было сформировано фабричного метода экземпляров сервиса"))
+           .Where(d => d!.ImplementationInstance).Check(i => i.IsNull("Неверно был сформирован экземпляр сервиса"))
+           .Where(d => d!.Lifetime).Check(l => l.IsEqual(service_lifetime))
+           .Where(d => d!.ServiceType).Check(t => t.IsEqual(service_type))
+           .Where(d => d!.ImplementationType).Check(t => t.IsNull());
 
         var provider = service_collection.BuildServiceProvider();
 
         var instance = provider.GetService(service_type);
         var service2_instance = Assert.That.Value(instance).As<Service2WithPrivateReadonlyFieldOfService1>();
 
-        var field_value = service2_instance.ActualValue.GetFieldValue();
+        var field_value = service2_instance.ActualValue!.GetFieldValue();
 
         Assert.That.Value(field_value).IsEqual(service1_instance);
     }
@@ -153,18 +153,18 @@ public class ComplexInjectionRegistratorTests
 
         Assert.That.Value(descriptors.Length).IsEqual(2);
         Assert.That.Value(descriptors[1])
-           .Where(d => d.ImplementationFactory).Check(f => f.IsNotNull("Не было сформировано фабричного метода экземпляров сервиса"))
-           .Where(d => d.ImplementationInstance).Check(i => i.IsNull("Неверно был сформирован экземпляр сервиса"))
-           .Where(d => d.Lifetime).Check(l => l.IsEqual(service_lifetime))
-           .Where(d => d.ServiceType).Check(t => t.IsEqual(service_type))
-           .Where(d => d.ImplementationType).Check(t => t.IsNull());
+           .Where(d => d!.ImplementationFactory).Check(f => f.IsNotNull("Не было сформировано фабричного метода экземпляров сервиса"))
+           .Where(d => d!.ImplementationInstance).Check(i => i.IsNull("Неверно был сформирован экземпляр сервиса"))
+           .Where(d => d!.Lifetime).Check(l => l.IsEqual(service_lifetime))
+           .Where(d => d!.ServiceType).Check(t => t.IsEqual(service_type))
+           .Where(d => d!.ImplementationType).Check(t => t.IsNull());
 
         var provider = service_collection.BuildServiceProvider();
 
         var instance = provider.GetService(service_type);
         var service2_instance = Assert.That.Value(instance).As<Service2WithPrivatePropertyOfService1>();
 
-        var field_value = service2_instance.ActualValue.GetPropertyValue();
+        var field_value = service2_instance.ActualValue!.GetPropertyValue();
 
         Assert.That.Value(field_value).IsEqual(service1_instance);
     }
@@ -196,18 +196,18 @@ public class ComplexInjectionRegistratorTests
 
         Assert.That.Value(descriptors.Length).IsEqual(2);
         Assert.That.Value(descriptors[1])
-           .Where(d => d.ImplementationFactory).Check(f => f.IsNotNull("Не было сформировано фабричного метода экземпляров сервиса"))
-           .Where(d => d.ImplementationInstance).Check(i => i.IsNull("Неверно был сформирован экземпляр сервиса"))
-           .Where(d => d.Lifetime).Check(l => l.IsEqual(service_lifetime))
-           .Where(d => d.ServiceType).Check(t => t.IsEqual(service_type))
-           .Where(d => d.ImplementationType).Check(t => t.IsNull());
+           .Where(d => d!.ImplementationFactory).Check(f => f.IsNotNull("Не было сформировано фабричного метода экземпляров сервиса"))
+           .Where(d => d!.ImplementationInstance).Check(i => i.IsNull("Неверно был сформирован экземпляр сервиса"))
+           .Where(d => d!.Lifetime).Check(l => l.IsEqual(service_lifetime))
+           .Where(d => d!.ServiceType).Check(t => t.IsEqual(service_type))
+           .Where(d => d!.ImplementationType).Check(t => t.IsNull());
 
         var provider = service_collection.BuildServiceProvider();
 
         var instance = provider.GetService(service_type);
         var service2_instance = Assert.That.Value(instance).As<Service2WithPrivateInitPropertyOfService1>();
 
-        var field_value = service2_instance.ActualValue.GetPropertyValue();
+        var field_value = service2_instance.ActualValue!.GetPropertyValue();
 
         Assert.That.Value(field_value).IsEqual(service1_instance);
     }
@@ -249,18 +249,18 @@ public class ComplexInjectionRegistratorTests
 
         Assert.That.Value(descriptors.Length).IsEqual(3);
         Assert.That.Value(descriptors[2])
-           .Where(d => d.ImplementationFactory).Check(f => f.IsNotNull("Не было сформировано фабричного метода экземпляров сервиса"))
-           .Where(d => d.ImplementationInstance).Check(i => i.IsNull("Неверно был сформирован экземпляр сервиса"))
-           .Where(d => d.Lifetime).Check(l => l.IsEqual(service_lifetime))
-           .Where(d => d.ServiceType).Check(t => t.IsEqual(service_type))
-           .Where(d => d.ImplementationType).Check(t => t.IsNull());
+           .Where(d => d!.ImplementationFactory).Check(f => f.IsNotNull("Не было сформировано фабричного метода экземпляров сервиса"))
+           .Where(d => d!.ImplementationInstance).Check(i => i.IsNull("Неверно был сформирован экземпляр сервиса"))
+           .Where(d => d!.Lifetime).Check(l => l.IsEqual(service_lifetime))
+           .Where(d => d!.ServiceType).Check(t => t.IsEqual(service_type))
+           .Where(d => d!.ImplementationType).Check(t => t.IsNull());
 
         var provider = service_collection.BuildServiceProvider();
 
         var instance = provider.GetService(service_type);
         var service2_instance = Assert.That.Value(instance).As<Service2WithConstructorParameterOfService1AndFieldOfService3>();
 
-        var field_value_service1 = service2_instance.ActualValue.GetService1Value();
+        var field_value_service1 = service2_instance.ActualValue!.GetService1Value();
         var field_value_service3 = service2_instance.ActualValue.GetService3Value();
 
         Assert.That.Value(field_value_service1).IsEqual(service1_instance);
@@ -295,18 +295,18 @@ public class ComplexInjectionRegistratorTests
 
         Assert.That.Value(descriptors.Length).IsEqual(2);
         Assert.That.Value(descriptors[1])
-           .Where(d => d.ImplementationFactory).Check(f => f.IsNotNull("Не было сформировано фабричного метода экземпляров сервиса"))
-           .Where(d => d.ImplementationInstance).Check(i => i.IsNull("Неверно был сформирован экземпляр сервиса"))
-           .Where(d => d.Lifetime).Check(l => l.IsEqual(service_lifetime))
-           .Where(d => d.ServiceType).Check(t => t.IsEqual(service_type))
-           .Where(d => d.ImplementationType).Check(t => t.IsNull());
+           .Where(d => d!.ImplementationFactory).Check(f => f.IsNotNull("Не было сформировано фабричного метода экземпляров сервиса"))
+           .Where(d => d!.ImplementationInstance).Check(i => i.IsNull("Неверно был сформирован экземпляр сервиса"))
+           .Where(d => d!.Lifetime).Check(l => l.IsEqual(service_lifetime))
+           .Where(d => d!.ServiceType).Check(t => t.IsEqual(service_type))
+           .Where(d => d!.ImplementationType).Check(t => t.IsNull());
 
         var provider = service_collection.BuildServiceProvider();
 
         var instance = provider.GetService(service_type);
         var service2_instance = Assert.That.Value(instance).As<Service2WithConstructorParameterInjectAttribute>();
 
-        var field_value_service1 = service2_instance.ActualValue.GetService1Value();
+        var field_value_service1 = service2_instance.ActualValue!.GetService1Value();
 
         Assert.That.Value(field_value_service1).IsEqual(service1_instance);
     }
@@ -349,11 +349,11 @@ public class ComplexInjectionRegistratorTests
 
         Assert.That.Value(service2_1)
            .As<Service2WithOptionalConstructorParameter>()
-           .Where(s => s.GetService1()).Check(s1 => s1.IsNotNull());
+           .Where(s => s!.GetService1()).Check(s1 => s1.IsNotNull());
 
         Assert.That.Value(service2_2)
            .As<Service2WithOptionalConstructorParameter>()
-           .Where(s => s.GetService1()).Check(s1 => s1.IsNull());
+           .Where(s => s!.GetService1()).Check(s1 => s1.IsNull());
     }
 
     /// <summary>Тестовая реализация сервиса 2 с опциональным полем</summary>
@@ -393,11 +393,11 @@ public class ComplexInjectionRegistratorTests
 
         Assert.That.Value(service2_1)
            .As<Service2WithOptionalPrivateReadonlyField>()
-           .Where(s => s.GetService1()).Check(s1 => s1.IsNotNull());
+           .Where(s => s!.GetService1()).Check(s1 => s1.IsNotNull());
 
         Assert.That.Value(service2_2)
            .As<Service2WithOptionalPrivateReadonlyField>()
-           .Where(s => s.GetService1()).Check(s1 => s1.IsNull());
+           .Where(s => s!.GetService1()).Check(s1 => s1.IsNull());
     }
 
     /// <summary>Тестовая реализация сервиса 2 с опциональным свойством</summary>
@@ -437,11 +437,11 @@ public class ComplexInjectionRegistratorTests
 
         Assert.That.Value(service2_1)
            .As<Service2WithOptionalPrivateReadonlyProperty>()
-           .Where(s => s.GetService1()).Check(s1 => s1.IsNotNull());
+           .Where(s => s!.GetService1()).Check(s1 => s1.IsNotNull());
 
         Assert.That.Value(service2_2)
            .As<Service2WithOptionalPrivateReadonlyProperty>()
-           .Where(s => s.GetService1()).Check(s1 => s1.IsNull());
+           .Where(s => s!.GetService1()).Check(s1 => s1.IsNull());
     }
 
     private class Service2WithPublicMethodInjection : ITestService2
@@ -468,18 +468,18 @@ public class ComplexInjectionRegistratorTests
         var descriptors = service_collection.ToArray();
         Assert.That.Value(descriptors.Length).IsEqual(2);
         Assert.That.Value(descriptors[1])
-           .Where(d => d.ImplementationFactory).Check(f => f.IsNotNull("Не было сформировано фабричного метода экземпляров сервиса"))
-           .Where(d => d.ImplementationInstance).Check(i => i.IsNull("Неверно был сформирован экземпляр сервиса"))
-           .Where(d => d.Lifetime).Check(l => l.IsEqual(service_lifetime))
-           .Where(d => d.ServiceType).Check(t => t.IsEqual(service_interface))
-           .Where(d => d.ImplementationType).Check(t => t.IsNull());
+           .Where(d => d!.ImplementationFactory).Check(f => f.IsNotNull("Не было сформировано фабричного метода экземпляров сервиса"))
+           .Where(d => d!.ImplementationInstance).Check(i => i.IsNull("Неверно был сформирован экземпляр сервиса"))
+           .Where(d => d!.Lifetime).Check(l => l.IsEqual(service_lifetime))
+           .Where(d => d!.ServiceType).Check(t => t.IsEqual(service_interface))
+           .Where(d => d!.ImplementationType).Check(t => t.IsNull());
 
         var provider = service_collection.BuildServiceProvider();
 
         var service = provider.GetRequiredService<ITestService2>();
 
         Assert.That.Value(service).As<Service2WithPublicMethodInjection>()
-           .Where(s => s.GetService1()).Check(s => s.Is<SimpleTestService1>());
+           .Where(s => s!.GetService1()).Check(s => s.Is<SimpleTestService1>());
     }
 
     private class Service2WithPublicMethodInjectionOptional : ITestService2
@@ -505,18 +505,18 @@ public class ComplexInjectionRegistratorTests
         var descriptors = service_collection.ToArray();
         Assert.That.Value(descriptors.Length).IsEqual(1);
         Assert.That.Value(descriptors[0])
-           .Where(d => d.ImplementationFactory).Check(f => f.IsNotNull("Не было сформировано фабричного метода экземпляров сервиса"))
-           .Where(d => d.ImplementationInstance).Check(i => i.IsNull("Неверно был сформирован экземпляр сервиса"))
-           .Where(d => d.Lifetime).Check(l => l.IsEqual(service_lifetime))
-           .Where(d => d.ServiceType).Check(t => t.IsEqual(service_interface))
-           .Where(d => d.ImplementationType).Check(t => t.IsNull());
+           .Where(d => d!.ImplementationFactory).Check(f => f.IsNotNull("Не было сформировано фабричного метода экземпляров сервиса"))
+           .Where(d => d!.ImplementationInstance).Check(i => i.IsNull("Неверно был сформирован экземпляр сервиса"))
+           .Where(d => d!.Lifetime).Check(l => l.IsEqual(service_lifetime))
+           .Where(d => d!.ServiceType).Check(t => t.IsEqual(service_interface))
+           .Where(d => d!.ImplementationType).Check(t => t.IsNull());
 
         var provider = service_collection.BuildServiceProvider();
 
         var service = provider.GetRequiredService<ITestService2>();
 
         Assert.That.Value(service).As<Service2WithPublicMethodInjectionOptional>()
-           .Where(s => s.GetService1()).Check(s => s.IsNull());
+           .Where(s => s!.GetService1()).Check(s => s.IsNull());
     }
 
     private class Service2WithPrivateMethodInjection : ITestService2
@@ -543,18 +543,18 @@ public class ComplexInjectionRegistratorTests
         var descriptors = service_collection.ToArray();
         Assert.That.Value(descriptors.Length).IsEqual(2);
         Assert.That.Value(descriptors[1])
-           .Where(d => d.ImplementationFactory).Check(f => f.IsNotNull("Не было сформировано фабричного метода экземпляров сервиса"))
-           .Where(d => d.ImplementationInstance).Check(i => i.IsNull("Неверно был сформирован экземпляр сервиса"))
-           .Where(d => d.Lifetime).Check(l => l.IsEqual(service_lifetime))
-           .Where(d => d.ServiceType).Check(t => t.IsEqual(service_interface))
-           .Where(d => d.ImplementationType).Check(t => t.IsNull());
+           .Where(d => d!.ImplementationFactory).Check(f => f.IsNotNull("Не было сформировано фабричного метода экземпляров сервиса"))
+           .Where(d => d!.ImplementationInstance).Check(i => i.IsNull("Неверно был сформирован экземпляр сервиса"))
+           .Where(d => d!.Lifetime).Check(l => l.IsEqual(service_lifetime))
+           .Where(d => d!.ServiceType).Check(t => t.IsEqual(service_interface))
+           .Where(d => d!.ImplementationType).Check(t => t.IsNull());
 
         var provider = service_collection.BuildServiceProvider();
 
         var service = provider.GetRequiredService<ITestService2>();
 
         Assert.That.Value(service).As<Service2WithPrivateMethodInjection>()
-           .Where(s => s.GetService1()).Check(s => s.Is<SimpleTestService1>());
+           .Where(s => s!.GetService1()).Check(s => s.Is<SimpleTestService1>());
     }
 
     private class Service2WithPrivateMethodInjectionOptional : ITestService2
@@ -580,17 +580,17 @@ public class ComplexInjectionRegistratorTests
         var descriptors = service_collection.ToArray();
         Assert.That.Value(descriptors.Length).IsEqual(1);
         Assert.That.Value(descriptors[0])
-           .Where(d => d.ImplementationFactory).Check(f => f.IsNotNull("Не было сформировано фабричного метода экземпляров сервиса"))
-           .Where(d => d.ImplementationInstance).Check(i => i.IsNull("Неверно был сформирован экземпляр сервиса"))
-           .Where(d => d.Lifetime).Check(l => l.IsEqual(service_lifetime))
-           .Where(d => d.ServiceType).Check(t => t.IsEqual(service_interface))
-           .Where(d => d.ImplementationType).Check(t => t.IsNull());
+           .Where(d => d!.ImplementationFactory).Check(f => f.IsNotNull("Не было сформировано фабричного метода экземпляров сервиса"))
+           .Where(d => d!.ImplementationInstance).Check(i => i.IsNull("Неверно был сформирован экземпляр сервиса"))
+           .Where(d => d!.Lifetime).Check(l => l.IsEqual(service_lifetime))
+           .Where(d => d!.ServiceType).Check(t => t.IsEqual(service_interface))
+           .Where(d => d!.ImplementationType).Check(t => t.IsNull());
 
         var provider = service_collection.BuildServiceProvider();
 
         var service = provider.GetRequiredService<ITestService2>();
 
         Assert.That.Value(service).As<Service2WithPrivateMethodInjectionOptional>()
-           .Where(s => s.GetService1()).Check(s => s.IsNull());
+           .Where(s => s!.GetService1()).Check(s => s.IsNull());
     }
 }
