@@ -1,7 +1,7 @@
 ﻿namespace MathCore.DI;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
-public sealed class ServiceAttribute : Attribute
+public class ServiceAttribute : Attribute
 {
     public ServiceLifetime Mode { get; set; } = ServiceLifetime.Transient;
 
