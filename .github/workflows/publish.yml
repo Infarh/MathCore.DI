@@ -15,14 +15,14 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 7.0.x
+          dotnet-version: 9.0.x
           
       - name: Cache NuGet  
         uses: actions/cache@v3
@@ -61,11 +61,6 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Install .NET Core
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: 7.0.x
-    
       - name: Get artifact
         uses: actions/download-artifact@v3.0.1
         id: download
@@ -82,11 +77,6 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Install .NET Core
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: 7.0.x
-    
       - name: Get artifact
         uses: actions/download-artifact@v3.0.1
         id: download
