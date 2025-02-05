@@ -1,25 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace ConsoleTests;
 
-namespace ConsoleTests
+public class TestImpl(ICalculator Calculator, IChecker Checker, IPrinter Printer, ITester Tester)
+    : IManager
 {
-    public class TestImpl : IManager
-    {
-        public TestImpl(ICalculator Calculator, IChecker Checker, IPrinter Printer, ITester Tester)
-        {
-            this.Calculator = Calculator;
-            this.Checker = Checker;
-            this.Printer = Printer;
-            this.Tester = Tester;
-        }
-
-        public ICalculator Calculator { get; init; }
-        public IChecker Checker { get; }
-        public IPrinter Printer { get; set; }
-        public ITester Tester { get; set; }
-    }
+    public ICalculator Calculator { get; init; } = Calculator;
+    public IChecker Checker { get; } = Checker;
+    public IPrinter Printer { get; set; } = Printer;
+    public ITester Tester { get; set; } = Tester;
 }

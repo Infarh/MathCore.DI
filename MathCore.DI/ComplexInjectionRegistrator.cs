@@ -101,7 +101,7 @@ public static class ComplexInjectionRegistrator
            .Select(property => (property, Inject: property.GetCustomAttributes().FirstOrDefault(a => a.GetType().Name == "InjectAttribute")))
            .Where(p => p.Inject is not null)
            // Выбираем те свойства, у которых есть атрибут [Inject]
-           .Select(p =>
+           .Select(MemberBinding (p) =>
             {
                 var (property, inject) = p;
                 var required = (inject as InjectAttribute)?.Required 
@@ -113,7 +113,7 @@ public static class ComplexInjectionRegistrator
                     ? Expression.Call(get_required_service, sp, type)
                     : Expression.Call(sp, get_service, type);
                 var value = Expression.Convert(obj, property_type);      // Полученный объект приводим к property_type
-                return (MemberBinding)Expression.Bind(property, value);  // Формируем выражение, выполняющее привязку полученного значения к свойству
+                return Expression.Bind(property, value);  // Формируем выражение, выполняющее привязку полученного значения к свойству
             })
            .ToArray();
 
@@ -122,7 +122,7 @@ public static class ComplexInjectionRegistrator
            .Concat(service_type.GetFields(inst_no_public))
            .Select(field => (property: field, Inject: field.GetCustomAttributes().FirstOrDefault(a => a.GetType().Name == "InjectAttribute")))
            .Where(p => p.Inject is not null)
-           .Select(f =>
+           .Select(MemberBinding (f) =>
             {
                 var (field, inject) = f;
                 var required = (inject as InjectAttribute)?.Required 
@@ -134,7 +134,7 @@ public static class ComplexInjectionRegistrator
                     ? Expression.Call(get_required_service, sp, type)
                     : Expression.Call(sp, get_service, type);
                 var value = Expression.Convert(obj, field_type);        // Полученный объект приводим к property_type
-                return (MemberBinding)Expression.Bind(field, value);    // Формируем выражение, выполняющее привязку полученного значения к полю
+                return Expression.Bind(field, value);    // Формируем выражение, выполняющее привязку полученного значения к полю
             })
            .ToArray();
 
@@ -154,7 +154,7 @@ public static class ComplexInjectionRegistrator
         var methods = service_type.GetMethods(inst_public)
            .Concat(service_type.GetMethods(inst_no_public))
            .Where(InitMethod => InitMethod.GetCustomAttribute<InjectAttribute>() != null) // где есть атрибут [Inject]
-           .Select(InitMethod =>
+           .Select(Expression (InitMethod) =>
 {
                 var inject = InitMethod.GetCustomAttributes().FirstOrDefault(a => a.GetType().Name == "InjectAttribute");
                 var method_required = (inject as InjectAttribute)?.Required;
@@ -179,7 +179,7 @@ public static class ComplexInjectionRegistrator
                    : Expression.Convert(result, service_type);
 
                // Формируем выражение вызова данного метода с передачей ему полного набора параметров
-               return (Expression)Expression.Call(service_impl, InitMethod, parameters);
+               return Expression.Call(service_impl, InitMethod, parameters);
            })
            .ToArray();
 
@@ -205,7 +205,7 @@ public static class ComplexInjectionRegistrator
         var factory = factory_expr.Compile()
             ?? throw new InvalidOperationException("Не удалось выполнить сборку выражения инициализации сервиса");
 
-        return new ServiceDescriptor(Service, factory, Mode);
+        return new(Service, factory, Mode);
     }
 
     /// <summary>Добавить сервис с возможностями внедрения зависимости через поля/свойства и методы</summary>
@@ -240,7 +240,7 @@ public static class ComplexInjectionRegistrator
     private static IServiceCollection AddSimple(this IServiceCollection services, Type Service, Type? Implementation, ServiceLifetime Mode)
     {
         var descriptor = Implementation is null
-            ? new ServiceDescriptor(Service, Service, Mode)
+            ? new(Service, Service, Mode)
             : new ServiceDescriptor(Service, Implementation, Mode);
 
         services.TryAdd(descriptor);

@@ -117,7 +117,7 @@ internal static class InterfaceImplementator
     {
         var properties = InterfaceType.GetProperties();
 
-        var assembly = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(Guid.NewGuid().ToString()), AssemblyBuilderAccess.Run);
+        var assembly = AssemblyBuilder.DefineDynamicAssembly(new(Guid.NewGuid().ToString()), AssemblyBuilderAccess.Run);
         var module = assembly.DefineDynamicModule("MathCore.Hosting.Emit");
 
         var composition_type_name = $"MathCore.Hosting.Emit.{InterfaceType.Name.TrimStart('I')}Composition";

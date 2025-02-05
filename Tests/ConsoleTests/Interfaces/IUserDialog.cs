@@ -1,8 +1,7 @@
-﻿namespace ConsoleTests.Interfaces
+﻿namespace ConsoleTests.Interfaces;
+
+[Service(ServiceLifetime.Singleton, Implementation = typeof(UserDialogService))]
+public interface IUserDialog
 {
-    [Service(ServiceLifetime.Singleton, Implementation = typeof(UserDialogService))]
-    public interface IUserDialog
-    {
         
-    }
 }
