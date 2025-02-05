@@ -1,6 +1,4 @@
-﻿using ConsoleTests.Interfaces;
-
-namespace ConsoleTests.Services;
+﻿namespace ConsoleTests.Services;
 
 public class Tester : ITester
 {

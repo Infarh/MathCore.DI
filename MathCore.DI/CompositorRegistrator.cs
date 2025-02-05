@@ -35,7 +35,7 @@ public static class CompositorRegistrator
         if (interface_type.GetProperties(instance).Any(p => p.GetIndexParameters() is { Length: > 0 }))
             throw new InvalidOperationException("В указанном интерфейсе присутствуют индексаторы. Интерфейс может содержать только свойства.");
 
-        services.Add(new ServiceDescriptor(interface_type, interface_type.CreateImplementation(), ServiceLifetime));
+        services.Add(new(interface_type, interface_type.CreateImplementation(), ServiceLifetime));
 
         return services;
     }

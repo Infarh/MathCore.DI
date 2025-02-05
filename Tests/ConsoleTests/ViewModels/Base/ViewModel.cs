@@ -9,6 +9,6 @@ internal class ViewModel : INotifyPropertyChanged
 
     protected virtual void OnPropertyChanged([CallerMemberName] string? PropertyName = null)
     {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(PropertyName));
+        PropertyChanged?.Invoke(this, new(PropertyName));
     }
 }
