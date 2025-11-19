@@ -3,7 +3,7 @@
 /// <summary>
 /// Атрибут, используемый для маркировки класса или интерфейса в качестве сервиса.
 /// </summary>
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, Inherited = false)]
 public class ServiceAttribute : Attribute
 {
     /// <summary>
@@ -11,24 +11,21 @@ public class ServiceAttribute : Attribute
     /// </summary>
     public ServiceLifetime Mode { get; set; } = ServiceLifetime.Transient;
 
-    private Type? _Implementation;
-
     /// <summary>
     /// Получает или устанавливает тип реализации сервиса.
     /// </summary>
     /// <exception cref="InvalidOperationException">Вызывается, если тип реализации устанавливается после установки интерфейса.</exception>
     public Type? Implementation
     {
-        get => _Implementation;
+        get;
         set
         {
-            if (_Interface is not null)
-                throw new InvalidOperationException("Нельзя устанавливать тип реализации после установки интерфейса. Реализацией сервиса должен быть класс.");
-            _Implementation = value;
+            if (Interface is not null)
+                throw new InvalidOperationException(
+                    "Нельзя устанавливать тип реализации после установки интерфейса. Реализацией сервиса должен быть класс.");
+            field = value;
         }
     }
-
-    private Type? _Interface;
 
     /// <summary>
     /// Получает или устанавливает тип интерфейса сервиса.
@@ -36,12 +33,13 @@ public class ServiceAttribute : Attribute
     /// <exception cref="InvalidOperationException">Вызывается, если тип интерфейса устанавливается после установки реализации.</exception>
     public Type? Interface
     {
-        get => _Interface;
+        get;
         set
         {
-            if (_Implementation is not null)
-                throw new InvalidOperationException("Нельзя устанавливать тип интерфейса после установки реализации. Интерфейсом должен быть тип.");
-            _Interface = value;
+            if (Implementation is not null)
+                throw new InvalidOperationException(
+                    "Нельзя устанавливать тип интерфейса после установки реализации. Интерфейсом должен быть тип.");
+            field = value;
         }
     }
 
@@ -59,24 +57,24 @@ public class ServiceAttribute : Attribute
     /// <summary>
     /// Деконструирует атрибут сервиса в его части.
     /// </summary>
-    /// <param name="Implementation">Тип реализации сервиса.</param>
-    /// <param name="Mode">Режим временного lifetime сервиса.</param>
-    public void Deconstruct(out Type? Implementation, out ServiceLifetime Mode)
+    /// <param name="implementation">Тип реализации сервиса.</param>
+    /// <param name="mode">Режим временного lifetime сервиса.</param>
+    public void Deconstruct(out Type? implementation, out ServiceLifetime mode)
     {
-        Implementation = this.Implementation;
-        Mode = this.Mode;
+        implementation = Implementation;
+        mode = Mode;
     }
 
     /// <summary>
     /// Деконструирует атрибут сервиса в его части.
     /// </summary>
-    /// <param name="Service">Тип интерфейса сервиса.</param>
-    /// <param name="Implementation">Тип реализации сервиса.</param>
-    /// <param name="Mode">Режим временного lifetime сервиса.</param>
-    public void Deconstruct(out Type? Service, out Type? Implementation, out ServiceLifetime Mode)
+    /// <param name="service">Тип интерфейса сервиса.</param>
+    /// <param name="implementation">Тип реализации сервиса.</param>
+    /// <param name="mode">Режим временного lifetime сервиса.</param>
+    public void Deconstruct(out Type? service, out Type? implementation, out ServiceLifetime mode)
     {
-        Service = _Interface;
-        Implementation = _Implementation;
-        Mode = this.Mode;
+        service = Interface;
+        implementation = Implementation;
+        mode = Mode;
     }
 }
