@@ -93,8 +93,8 @@ internal static class InterfaceImplementator
             type.DefineField(
                 fieldName: FieldName,
                 type: PropertyType,
-                attributes: Readonly 
-                    ? FieldAttributes.Private | FieldAttributes.InitOnly 
+                attributes: Readonly
+                    ? FieldAttributes.Private | FieldAttributes.InitOnly
                     : FieldAttributes.Private);
 
         private void MakeConstructor(IReadOnlyCollection<FieldBuilder> Fields)
@@ -115,10 +115,8 @@ internal static class InterfaceImplementator
             ctor_il.Emit(OpCodes.Ret);
         }
 
-        private List<FieldBuilder> MakeProperties(IEnumerable<PropertyInfo> Properties) => 
-            Properties
-                .Select(PropertyInfo => type.MakeProperty(PropertyInfo).Field)
-                .ToList();
+        private List<FieldBuilder> MakeProperties(IEnumerable<PropertyInfo> Properties) =>
+            [.. Properties.Select(PropertyInfo => type.MakeProperty(PropertyInfo).Field)];
     }
 
     public static Type CreateImplementation(this Type InterfaceType)
