@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace MathCore.DI.Infrastructure.Extensions;
 
+/// <summary>Расширения для работы с объектами</summary>
 internal static class ObjectEx
 {
     /// <summary>Проверка на пустую ссылку</summary>
